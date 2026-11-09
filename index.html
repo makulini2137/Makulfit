@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101512">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>MAKULFIT 1.0</title>
+<style>
+:root{--bg:#110d18;--panel:#20172b;--panel2:#2c2039;--green:#f0a8ff;--green2:#c45be8;--muted:#c2b3ca;--text:#fbf5ff;--line:#44304f;--red:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#21132c,#100b16 55%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:0 0 34px}
+header{padding:26px 20px 18px;background:radial-gradient(ellipse at top right,#542568 0,transparent 65%)}.brand{font-size:27px;font-weight:900;letter-spacing:1px}.brand span{color:var(--green)}.sub{color:var(--muted);font-size:13px;margin-top:3px}
+main{max-width:680px;margin:auto;padding:0 15px}.card{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:17px;margin:13px 0;box-shadow:0 8px 24px #0002}
+h2{font-size:18px;margin:0 0 13px}.muted{color:var(--muted);font-size:13px}.row{display:flex;gap:9px;align-items:center}.row>*{min-width:0}.row.wrap{flex-wrap:wrap}
+input,select{width:100%;background:#160f20;color:var(--text);border:1px solid #574064;border-radius:12px;padding:13px;font:inherit;outline:none}input:focus,select:focus{border-color:var(--green2)}
+button{border:0;border-radius:12px;padding:13px 15px;background:var(--green2);color:#07110a;font-weight:800;font-size:14px;cursor:pointer}button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.danger{background:#512a2a;color:#ffdede}button:disabled{opacity:.45}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{background:var(--panel2);border-radius:14px;padding:12px}.stat b{display:block;font-size:20px}.stat small{color:var(--muted)}
+.progress{height:9px;background:#29352d;border-radius:20px;overflow:hidden;margin:12px 0 5px}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--green2),var(--green));width:0%}
+.food{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}.food:last-child{border:0}.food small{display:block;color:var(--muted);margin-top:3px}
+.tabs{display:flex;gap:8px;overflow:auto;padding:4px 0 10px}.tab{white-space:nowrap}.tab.active{background:var(--green);color:#08120b}
+#video{width:100%;max-height:310px;object-fit:cover;border-radius:14px;background:#050805;display:none;margin:12px 0}
+.result{background:#291633;border:1px solid #70408a;border-radius:14px;padding:14px;margin-top:12px;display:none}.pill{display:inline-block;background:#26372b;border-radius:30px;padding:5px 9px;font-size:12px;color:#c8f2d1;margin:3px 3px 0 0}
+.notice{padding:11px;border-radius:12px;background:#29251a;color:#e9dcae;font-size:12px;line-height:1.5;margin-top:10px}
+label{font-size:12px;color:var(--muted);display:block;margin:9px 0 5px}
+@media(max-width:420px){.row.mobile-stack{flex-direction:column;align-items:stretch}.stat b{font-size:17px}}
+</style>
+</head>
+<body>
+<header><div class="brand">MAKUL<span>FIT</span> <small style="font-size:12px;color:#b9c8bd">1.0</small></div><div class="sub">Jedzenie • trening • postępy • Twoje cele</div></header>
+<main>
+<div class="tabs">
+<button class="tab active" data-tab="home">Dziennik</button>
+<button class="tab secondary" data-tab="scanner">Skaner</button>
+<button class="tab secondary" data-tab="recipes">Przepisy</button>
+<button class="tab secondary" data-tab="plan">7 dni</button>
+<button class="tab secondary" data-tab="profile">Profil</button>
+<button class="tab secondary" data-tab="progress">Postępy</button>
+<button class="tab secondary" data-tab="water">Woda</button>
+<button class="tab secondary" data-tab="workouts">Trening</button>
+<button class="tab secondary" data-tab="support">Wsparcie ❤️</button>
+</div>
+
+<section id="home">
+<div class="card">
+<h2>Dzisiejsze podsumowanie</h2>
+<div class="statgrid">
+<div class="stat"><b id="kcal">0</b><small>kcal zjedzone</small></div>
+<div class="stat"><b id="remaining">2000</b><small>kcal pozostało</small></div>
+<div class="stat"><b id="goalView">2000</b><small>cel kcal</small></div>
+</div>
+<div class="progress"><i id="bar"></i></div><div class="muted" id="progressText">0% dziennego celu</div>
+<div class="statgrid" style="margin-top:14px">
+<div class="stat"><b id="protein">0 g</b><small>Białko</small></div>
+<div class="stat"><b id="fat">0 g</b><small>Tłuszcze</small></div>
+<div class="stat"><b id="carbs">0 g</b><small>Węglowodany</small></div>
+</div>
+</div>
+<div class="card"><h2>Dodaj posiłek ręcznie</h2>
+<label>Nazwa produktu / posiłku</label><input id="foodName" placeholder="np. Owsianka">
+<div class="row">
+<div style="flex:1"><label>Kalorie (kcal)</label><input id="foodKcal" type="number" min="0" placeholder="250"></div>
+<div style="flex:1"><label>Białko (g)</label><input id="foodP" type="number" min="0" placeholder="10"></div>
+</div>
+<div class="row">
+<div style="flex:1"><label>Tłuszcze (g)</label><input id="foodF" type="number" min="0" placeholder="5"></div>
+<div style="flex:1"><label>Węglowodany (g)</label><input id="foodC" type="number" min="0" placeholder="35"></div>
+</div>
+<button style="width:100%;margin-top:12px" onclick="addManual()">Dodaj do dziennika</button>
+</div>
+<div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Twoje posiłki</h2><button class="secondary" onclick="clearDay()">Wyczyść dzień</button></div><div id="foodList" class="muted" style="margin-top:10px">Brak dodanych produktów.</div></div>
+</section>
+
+<section id="scanner" style="display:none">
+<div class="card">
+<h2>📷 Skaner kodów kreskowych</h2>
+<p class="muted">Zeskanuj kod kreskowy opakowania albo wpisz go ręcznie. Produktów szukamy w bazie Open Food Facts.</p>
+<button style="width:100%" id="startScan" onclick="startScanner()">Uruchom aparat i skanuj</button>
+<video id="video" playsinline muted></video>
+<div class="row" style="margin-top:9px"><button class="secondary" style="flex:1" onclick="stopScanner()">Zatrzymaj aparat</button><button class="secondary" style="flex:1" onclick="switchTab('home')">Wróć do dziennika</button></div>
+<label>Lub wpisz kod kreskowy (EAN)</label>
+<div class="row mobile-stack"><input id="barcode" inputmode="numeric" placeholder="np. 5901234123457"><button onclick="lookupBarcode()">Szukaj produktu</button></div>
+<div id="scanStatus" class="muted" style="margin-top:10px" aria-live="polite"></div>
+<div class="result" id="productResult">
+<strong id="productName"></strong><div class="muted" id="productBrand" style="margin-top:4px"></div>
+<div style="margin:12px 0"><span class="pill" id="productKcal"></span><span class="pill" id="productP"></span><span class="pill" id="productF"></span><span class="pill" id="productC"></span></div>
+<label>Gramatura (g)</label><input id="grams" type="number" min="1" value="100" oninput="updateProductPreview()">
+<div class="muted" id="productPreview" style="margin:9px 0"></div>
+<button style="width:100%" onclick="addScannedProduct()">Dodaj do dziennika</button>
+</div>
+<div class="notice">Wskazówka: skanowanie aparatem wymaga obsługi BarcodeDetector i dostępu do kamery. Jeśli przeglądarka nie pozwoli uruchomić aparatu z pliku, wpisz kod kreskowy ręcznie — wyszukiwanie produktu nadal zadziała.</div>
+</div>
+</section>
+
+
+<section id="recipes" style="display:none">
+<div class="card">
+<h2>🍓 Gotowe przepisy</h2>
+<p class="muted">Wybierz posiłek, sprawdź orientacyjne wartości i dodaj go jednym kliknięciem do dziennika.</p>
+<div class="row mobile-stack">
+<input id="recipeSearch" placeholder="Szukaj przepisu…" oninput="renderRecipes()">
+<select id="recipeType" onchange="renderRecipes()"><option value="all">Wszystkie</option><option value="breakfast">Śniadania</option><option value="lunch">Obiady</option><option value="dinner">Kolacje</option><option value="snack">Przekąski</option></select>
+</div>
+<div id="recipeList" style="margin-top:12px"></div>
+</div>
+<div class="card">
+<h2>Własny przepis</h2>
+<p class="muted">Zapisz własny przepis, aby używać go ponownie.</p>
+<label>Nazwa przepisu</label><input id="customRecipeName" placeholder="np. Moja owsianka">
+<label>Składniki / opis</label><input id="customRecipeDesc" placeholder="np. płatki, mleko, banan">
+<div class="row">
+<div style="flex:1"><label>Kalorie</label><input id="customRecipeK" type="number" min="0" placeholder="350"></div>
+<div style="flex:1"><label>Białko (g)</label><input id="customRecipeP" type="number" min="0" placeholder="20"></div>
+</div>
+<div class="row">
+<div style="flex:1"><label>Tłuszcze (g)</label><input id="customRecipeF" type="number" min="0" placeholder="10"></div>
+<div style="flex:1"><label>Węglowodany (g)</label><input id="customRecipeC" type="number" min="0" placeholder="45"></div>
+</div>
+<button style="width:100%;margin-top:12px" onclick="saveCustomRecipe()">Zapisz własny przepis</button>
+<div id="customRecipeList" style="margin-top:12px"></div>
+</div>
+</section>
+
+
+<section id="plan" style="display:none">
+<div class="card">
+<h2>📅 Twój jadłospis na 7 dni</h2>
+<p class="muted">Przykładowy plan z 4 posiłkami dziennie. Wartości są orientacyjne — dopasuj porcje do swojego zapotrzebowania.</p>
+<div class="row mobile-stack">
+<select id="daySelect" onchange="renderDayPlan()">
+<option value="0">Poniedziałek</option><option value="1">Wtorek</option><option value="2">Środa</option><option value="3">Czwartek</option><option value="4">Piątek</option><option value="5">Sobota</option><option value="6">Niedziela</option>
+</select>
+<button class="secondary" onclick="showNextDay()">Następny dzień →</button>
+</div>
+<div id="dayPlan" style="margin-top:12px"></div>
+<div class="card" style="margin-top:14px;background:var(--panel2)">
+<h2>🛒 Lista zakupów na tydzień</h2>
+<p class="muted">Zaznaczaj produkty podczas zakupów. Lista zapisuje się w telefonie.</p>
+<div id="shoppingList"></div>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="resetShoppingList()">Odznacz wszystko</button>
+</div>
+<button style="width:100%;margin-top:14px" onclick="addDayPlan()">Dodaj cały dzień do dziennika</button>
+<div class="notice">To przykładowy jadłospis, a nie indywidualna dieta medyczna. Jeśli masz alergie, nietolerancje lub specjalne zalecenia żywieniowe, sprawdź składniki i zamień nieodpowiednie produkty.</div>
+</div>
+</section>
+
+<section id="profile" style="display:none">
+<div class="card">
+<h2>🧮 Oblicz swoje zapotrzebowanie</h2>
+<p class="muted">Podaj podstawowe dane, aby oszacować dzienne zapotrzebowanie kaloryczne (wzór Mifflina–St Jeora).</p>
+<div class="row">
+<div style="flex:1"><label>Wiek</label><input id="age" type="number" min="18" max="100" placeholder="np. 25"></div>
+<div style="flex:1"><label>Wzrost (cm)</label><input id="height" type="number" min="120" max="230" placeholder="np. 175"></div>
+</div>
+<label>Waga (kg)</label><input id="weight" type="number" min="35" max="300" step="0.1" placeholder="np. 75">
+<label>Wariant wzoru</label><select id="sex"><option value="male">Mężczyzna</option><option value="female">Kobieta</option></select>
+<label>Poziom aktywności</label><select id="activity"><option value="1.2">Niska – głównie siedzący tryb</option><option value="1.375">Lekka – 1–3 treningi tygodniowo</option><option value="1.55">Umiarkowana – 3–5 treningów</option><option value="1.725">Wysoka – 6–7 treningów</option><option value="1.9">Bardzo wysoka – ciężka aktywność</option></select>
+<label>Cel</label><select id="goalType"><option value="maintain">Utrzymanie wagi</option><option value="lose">Stopniowa redukcja</option><option value="gain">Stopniowe zwiększanie masy</option></select>
+<button style="width:100%;margin-top:12px" onclick="calculateNeeds()">Oblicz zapotrzebowanie</button>
+<div id="needsResult" class="result" style="display:none"></div>
+<p class="muted">To orientacyjny szacunek, nie diagnoza ani indywidualna porada medyczna. U osób poniżej 18 lat, w ciąży, przy chorobach lub zaburzeniach odżywiania cel warto ustalić ze specjalistą.</p>
+</div>
+<div class="card"><h2>Twój dzienny cel</h2><label>Cel kalorii (kcal)</label><input id="goalInput" type="number" min="500" max="10000" value="2000"><button style="width:100%;margin-top:12px" onclick="saveGoal()">Zapisz cel</button><p class="muted">Możesz zmienić cel w dowolnym momencie.</p></div>
+<div class="card"><h2>O aplikacji</h2><p class="muted">MAKULFIT 1.0 zapisuje dane lokalnie na tym urządzeniu. Wartości produktów i wyliczenia są orientacyjne — sprawdzaj etykiety i dopasuj cele do swoich potrzeb.</p></div>
+</section>
+ 
+<section id="water" style="display:none">
+<div class="card">
+<h2>💧 Nawodnienie</h2>
+<p class="muted">Śledź ilość wypitej wody w ciągu dnia. Ustaw własny cel.</p>
+<div class="statgrid">
+<div class="stat"><b id="waterNow">0 ml</b><small>Wypito dzisiaj</small></div>
+<div class="stat"><b id="waterTargetView">2000 ml</b><small>Twój cel</small></div>
+<div class="stat"><b id="waterLeft">2000 ml</b><small>Pozostało</small></div>
+</div>
+<div class="progress"><i id="waterBar"></i></div>
+<label>Dzienny cel (ml)</label><input id="waterTarget" type="number" min="250" max="10000" step="250" value="2000">
+<div class="row" style="margin-top:12px"><button style="flex:1" onclick="addWater(250)">+250 ml</button><button style="flex:1" onclick="addWater(500)">+500 ml</button><button class="secondary" style="flex:1" onclick="addWater(1000)">+1 litr</button></div>
+<button class="secondary" style="width:100%;margin-top:10px" onclick="saveWaterTarget()">Zapisz cel wody</button>
+<button class="danger" style="width:100%;margin-top:10px" onclick="resetWater()">Wyzeruj dzisiejszy licznik</button>
+</div>
+</section>
+
+<section id="progress" style="display:none">
+<div class="card">
+<h2>📈 Twoje postępy</h2>
+<div class="row"><button class="secondary" id="range7" onclick="setProgressRange(7)">7 dni</button><button class="secondary" id="range30" onclick="setProgressRange(30)">30 dni</button></div>
+<h3>Kalorie z dziennika</h3><div id="calorieChart" style="display:flex;align-items:end;gap:5px;height:150px;margin-top:12px"></div>
+<p class="muted">Historia zapisuje dzienne podsumowania, gdy korzystasz z aplikacji.</p>
+</div>
+<div class="card">
+<h2>⚖️ Historia wagi</h2>
+<label>Dzisiejsza waga (kg)</label><div class="row"><input id="weightEntry" type="number" min="20" max="400" step="0.1" placeholder="np. 74.5"><button onclick="saveWeight()">Zapisz</button></div>
+<div id="weightChart" style="display:flex;align-items:end;gap:5px;height:130px;margin-top:16px"></div>
+<div id="weightHistory" class="muted" style="margin-top:10px"></div>
+</div>
+</section>
+
+<section id="workouts" style="display:none">
+<div class="card">
+<h2>🏋️ Trening</h2>
+<p class="muted">Zapisuj ćwiczenia, serie i powtórzenia. Historia zostaje w telefonie.</p>
+<label>Nazwa ćwiczenia</label><input id="exerciseName" placeholder="np. Przysiady">
+<div class="row">
+<div style="flex:1"><label>Serie</label><input id="exerciseSets" type="number" min="1" max="30" value="3"></div>
+<div style="flex:1"><label>Powtórzenia</label><input id="exerciseReps" type="number" min="1" max="200" value="12"></div>
+</div>
+<label>Obciążenie (kg, opcjonalnie)</label><input id="exerciseLoad" type="number" min="0" step="0.5" placeholder="np. 20">
+<button style="width:100%;margin-top:12px" onclick="addWorkout()">Zapisz ćwiczenie</button>
+</div>
+<div class="card"><h2>Dzisiejszy trening</h2><div id="todayWorkout" class="muted">Brak ćwiczeń.</div></div>
+<div class="card"><h2>Historia treningów</h2><div id="workoutHistory" class="muted">Brak zapisanych treningów.</div></div>
+</section>
+
+
+<section id="support" style="display:none">
+<div class="card" style="background:linear-gradient(145deg,#352044,#24172f)">
+<h2>❤️ Twoja przestrzeń wsparcia</h2>
+<p style="line-height:1.6">Zmiana nawyków to proces, nie wyścig. Nie musisz być idealnie konsekwentny/a. Jeden trudniejszy dzień nie przekreśla Twoich starań.</p>
+<p class="muted">Twoja wartość nie zależy od wagi, wyglądu ani liczby kalorii. Zasługujesz na szacunek i troskę na każdym etapie.</p>
+</div>
+<div class="card">
+<h2>🌤️ Jak się dzisiaj czujesz?</h2>
+<p class="muted">Zatrzymaj się na chwilę. Nie ma złych odpowiedzi.</p>
+<div class="row wrap" style="gap:8px">
+<button class="secondary mood-btn" data-mood="Dobrze" onclick="selectMood('Dobrze')">😊 Dobrze</button>
+<button class="secondary mood-btn" data-mood="W porządku" onclick="selectMood('W porządku')">🙂 W porządku</button>
+<button class="secondary mood-btn" data-mood="Średnio" onclick="selectMood('Średnio')">😐 Średnio</button>
+<button class="secondary mood-btn" data-mood="Ciężko" onclick="selectMood('Ciężko')">😔 Ciężko</button>
+</div>
+<label style="margin-top:14px">Co chciał(a)byś dziś sobie powiedzieć lub zapamiętać?</label>
+<textarea id="supportNote" rows="3" placeholder="Np. Dzisiaj wystarczy mały krok."></textarea>
+<button style="width:100%;margin-top:10px" onclick="saveSupportCheckin()">Zapisz moje samopoczucie</button>
+<div id="supportSaved" class="muted" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>💬 Kilka słów na trudniejszy moment</h2>
+<div id="supportMessage" style="font-size:16px;line-height:1.65;padding:8px 0">Nie musisz nadrabiać ani karać się za jedzenie lub opuszczony trening. Możesz po prostu wrócić do zwykłej troski o siebie.</div>
+<button class="secondary" style="width:100%" onclick="newSupportMessage()">Pokaż mi kolejne wsparcie</button>
+</div>
+<div class="card">
+<h2>🌱 Małe kroki też się liczą</h2>
+<ul style="line-height:1.8;padding-left:20px">
+<li>Zadbaj o regularne, wystarczające posiłki — nie głodź się.</li>
+<li>Wybierz ruch, który sprawia Ci przyjemność; odpoczynek też jest ważny.</li>
+<li>Pij wodę i postaraj się wyspać, zamiast dążyć do perfekcji.</li>
+<li>Zauważaj też korzyści niezwiązane z wagą: energię, nastrój, siłę i lepsze samopoczucie.</li>
+<li>Jeśli zdarzy Ci się dzień poza planem, nie musisz niczego „odrabiać”.</li>
+</ul>
+</div>
+<div class="card">
+<h2>🤝 Nie musisz radzić sobie sam/a</h2>
+<p style="line-height:1.6">Jeśli jedzenie, masa ciała lub ćwiczenia zaczynają wywoływać silny lęk, poczucie winy albo wpływają na codzienne życie, porozmawiaj z kimś zaufanym — bliską osobą, psychologiem lub lekarzem. Wsparcie specjalisty jest oznaką troski o siebie, nie porażką.</p>
+<p class="muted">Ta sekcja ma wspierać i motywować, ale nie zastępuje psychologa, psychoterapeuty ani pomocy medycznej. Jeśli czujesz, że możesz zrobić sobie krzywdę lub jesteś w bezpośrednim niebezpieczeństwie, skontaktuj się z numerem alarmowym 112 albo poproś zaufaną osobę o natychmiastową pomoc.</p>
+</div>
+</section>
+
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let foods=JSON.parse(localStorage.getItem('nf_foods')||'[]');
+let goal=Number(localStorage.getItem('nf_goal')||2000);
+let currentProduct=null, stream=null, scanTimer=null;
+function save(){localStorage.setItem('nf_foods',JSON.stringify(foods));render()}
+function render(){
+ const totals=foods.reduce((a,x)=>({k:a.k+x.k,p:a.p+x.p,f:a.f+x.f,c:a.c+x.c}),{k:0,p:0,f:0,c:0});
+ $('kcal').textContent=Math.round(totals.k);$('remaining').textContent=Math.max(0,goal-Math.round(totals.k));$('goalView').textContent=goal;
+ $('protein').textContent=totals.p.toFixed(1)+' g';$('fat').textContent=totals.f.toFixed(1)+' g';$('carbs').textContent=totals.c.toFixed(1)+' g';
+ const pct=Math.min(100,totals.k/goal*100);$('bar').style.width=pct+'%';$('progressText').textContent=Math.round(pct)+'% dziennego celu';
+ $('foodList').innerHTML=foods.length?foods.map((x,i)=>`<div class="food"><div><b>${esc(x.name)}</b><small>${Math.round(x.k)} kcal · B ${x.p.toFixed(1)} g · T ${x.f.toFixed(1)} g · W ${x.c.toFixed(1)} g</small></div><button class="danger" style="padding:8px 11px" onclick="removeFood(${i})">Usuń</button></div>`).join(''):'Brak dodanych produktów.';
+ $('goalInput').value=goal;
+ if(typeof snapshotDay==='function')snapshotDay();
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function addManual(){const name=$('foodName').value.trim(),k=+$('foodKcal').value,p=+$('foodP').value||0,f=+$('foodF').value||0,c=+$('foodC').value||0;if(!name||!Number.isFinite(k)||k<0){alert('Wpisz nazwę i poprawną liczbę kalorii.');return}foods.push({name,k,p,f,c});save();['foodName','foodKcal','foodP','foodF','foodC'].forEach(id=>$(id).value='')}
+function removeFood(i){foods.splice(i,1);save()}
+function clearDay(){if(confirm('Usunąć wszystkie dzisiejsze wpisy?')){foods=[];save()}}
+function saveGoal(){const n=+$('goalInput').value;if(n<500||n>10000){alert('Ustaw cel od 500 do 10000 kcal.');return}goal=n;localStorage.setItem('nf_goal',goal);render()}
+function switchTab(name){stopScanner();document.querySelectorAll('main section').forEach(s=>s.style.display='none');$(name).style.display='block';document.querySelectorAll('.tab').forEach(b=>{b.classList.toggle('active',b.dataset.tab===name);b.classList.toggle('secondary',b.dataset.tab!==name)});if(name==='water')renderWater();if(name==='progress')renderProgress();if(name==='workouts')renderWorkouts();if(name==='recipes')renderCustomRecipes();if(name==='support')renderSupport()}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+async function startScanner(){
+ const video=$('video'),status=$('scanStatus');
+ if(!('BarcodeDetector' in window)){status.textContent='Ta przeglądarka nie obsługuje automatycznego skanowania. Wpisz kod kreskowy poniżej.';return}
+ if(!navigator.mediaDevices?.getUserMedia){status.textContent='Brak dostępu do aparatu w tej przeglądarce. Wpisz kod ręcznie.';return}
+ try{
+  const detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+  video.srcObject=stream;video.style.display='block';await video.play();status.textContent='Szukam kodu… Ustaw opakowanie w kadrze.';
+  const scan=async()=>{if(!stream)return;try{const codes=await detector.detect(video);if(codes.length){$('barcode').value=codes[0].rawValue;stopScanner();lookupBarcode();return}}catch(e){}scanTimer=requestAnimationFrame(scan)};
+  scan();
+ }catch(e){status.textContent='Nie udało się uruchomić aparatu. Zezwól na dostęp do kamery albo wpisz kod ręcznie.';stopScanner()}
+}
+function stopScanner(){if(scanTimer)cancelAnimationFrame(scanTimer);scanTimer=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('video').pause();$('video').srcObject=null;$('video').style.display='none'}
+async function lookupBarcode(){
+ const code=$('barcode').value.trim();if(!/^[0-9]{8,14}$/.test(code)){$('scanStatus').textContent='Wpisz prawidłowy kod EAN (8–14 cyfr).';return}
+ $('scanStatus').textContent='Szukam produktu…';$('productResult').style.display='none';
+ try{
+  const res=await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json');
+  if(!res.ok)throw new Error('network');const data=await res.json();
+  if(data.status!==1||!data.product)throw new Error('notfound');
+  const p=data.product,n=p.product_name_pl||p.product_name||p.generic_name||'Produkt bez nazwy',nut=p.nutriments||{};
+  const val=(...keys)=>{for(const key of keys){const v=Number(nut[key]);if(Number.isFinite(v))return v}return 0};
+  currentProduct={name:n,brand:p.brands||'',k:val('energy-kcal_100g','energy-kcal'),p:val('proteins_100g','proteins'),f:val('fat_100g','fat'),c:val('carbohydrates_100g','carbohydrates')};
+  $('productName').textContent=n;$('productBrand').textContent=currentProduct.brand?'Marka: '+currentProduct.brand:'';
+  $('productKcal').textContent=Math.round(currentProduct.k)+' kcal / 100 g';$('productP').textContent='Białko '+currentProduct.p+' g';$('productF').textContent='Tłuszcz '+currentProduct.f+' g';$('productC').textContent='Węgle '+currentProduct.c+' g';
+  $('productResult').style.display='block';updateProductPreview();$('scanStatus').textContent='Znaleziono produkt. Sprawdź wartości z etykietą.';
+ }catch(e){$('scanStatus').textContent=e.message==='notfound'?'Nie znaleziono produktu. Sprawdź kod lub dodaj go ręcznie.':'Nie udało się połączyć z bazą. Sprawdź internet i spróbuj ponownie.'}
+}
+function updateProductPreview(){if(!currentProduct)return;const g=Math.max(0,+$('grams').value||0),m=g/100;$('productPreview').textContent=`${Math.round(currentProduct.k*m)} kcal · B ${ (currentProduct.p*m).toFixed(1)} g · T ${(currentProduct.f*m).toFixed(1)} g · W ${(currentProduct.c*m).toFixed(1)} g`}
+function addScannedProduct(){if(!currentProduct)return;const g=+$('grams').value;if(g<=0){alert('Wpisz gramaturę większą od zera.');return}const m=g/100;foods.push({name:currentProduct.name+' ('+g+' g)',k:currentProduct.k*m,p:currentProduct.p*m,f:currentProduct.f*m,c:currentProduct.c*m});save();$('scanStatus').textContent='Dodano produkt do dziennika!';$('productResult').style.display='none';$('barcode').value='';currentProduct=null;switchTab('home')}
+
+const recipes = [
+ {name:'Owsianka z bananem',type:'breakfast',desc:'Płatki owsiane, mleko, banan i cynamon.',k:420,p:16,f:11,c:65,ingredients:'60 g płatków owsianych, 200 ml mleka, 1 banan, cynamon'},
+ {name:'Jajecznica na grzankach',type:'breakfast',desc:'Jajka, pieczywo i pomidor.',k:390,p:23,f:20,c:29,ingredients:'3 jajka, 2 kromki chleba, pomidor'},
+ {name:'Skyr z owocami',type:'breakfast',desc:'Szybki, wysokobiałkowy posiłek.',k:280,p:27,f:3,c:35,ingredients:'200 g skyru, 100 g owoców, łyżeczka miodu'},
+ {name:'Kurczak z ryżem',type:'lunch',desc:'Klasyczny obiad z warzywami.',k:560,p:46,f:10,c:70,ingredients:'150 g piersi z kurczaka, 75 g ryżu suchego, 150 g warzyw'},
+ {name:'Makaron z tuńczykiem',type:'lunch',desc:'Makaron, tuńczyk i sos pomidorowy.',k:520,p:38,f:9,c:72,ingredients:'80 g makaronu suchego, 1/2 puszki tuńczyka, passata'},
+ {name:'Łosoś z ziemniakami',type:'lunch',desc:'Pieczony łosoś z ziemniakami i surówką.',k:610,p:38,f:25,c:55,ingredients:'130 g łososia, 250 g ziemniaków, surówka'},
+ {name:'Tortilla z kurczakiem',type:'dinner',desc:'Pełnoziarnista tortilla z warzywami.',k:450,p:35,f:13,c:48,ingredients:'1 tortilla, 100 g kurczaka, warzywa, sos jogurtowy'},
+ {name:'Sałatka z jajkiem',type:'dinner',desc:'Lekka sałatka z jajkami i fetą.',k:360,p:21,f:23,c:18,ingredients:'2 jajka, warzywa, 30 g fety'},
+ {name:'Kanapki z twarogiem',type:'dinner',desc:'Prosta kolacja z warzywami.',k:340,p:25,f:8,c:42,ingredients:'2 kromki chleba, 100 g twarogu, rzodkiewka'},
+ {name:'Koktajl bananowy',type:'snack',desc:'Banan, mleko i skyr.',k:250,p:17,f:4,c:37,ingredients:'1 banan, 150 ml mleka, 100 g skyru'},
+ {name:'Serek wiejski z owocami',type:'snack',desc:'Słodka przekąska z dużą ilością białka.',k:220,p:23,f:5,c:20,ingredients:'150 g serka wiejskiego, garść owoców'},
+ {name:'Orzechy i jabłko',type:'snack',desc:'Prosta przekąska na wynos.',k:230,p:5,f:15,c:22,ingredients:'20 g orzechów, 1 jabłko'}
+];
+const typeNames={breakfast:'Śniadanie',lunch:'Obiad',dinner:'Kolacja',snack:'Przekąska'};
+function renderRecipes(){
+ const q=($('recipeSearch')?.value||'').toLowerCase(),type=$('recipeType')?.value||'all';
+ const list=recipes.map((r,i)=>({...r,i})).filter(r=>(type==='all'||r.type===type)&&(r.name+' '+r.desc+' '+r.ingredients).toLowerCase().includes(q));
+ $('recipeList').innerHTML=list.length?list.map(r=>`<div class="food" style="display:block"><div class="row" style="justify-content:space-between"><div><b>${esc(r.name)}</b><small>${typeNames[r.type]} · ${r.k} kcal · B ${r.p} g · T ${r.f} g · W ${r.c} g</small></div><button onclick="addRecipe(${r.i})">Dodaj</button></div><div class="muted" style="margin-top:7px">${esc(r.desc)}</div><small style="color:var(--muted)">Składniki: ${esc(r.ingredients)}</small></div>`).join(''):'<p class="muted">Nie znaleziono przepisu.</p>';
+}
+function addRecipe(i){const r=recipes[i];foods.push({name:r.name,k:r.k,p:r.p,f:r.f,c:r.c});save();$('scanStatus').textContent='';alert('Dodano '+r.name+' do dziennika!');switchTab('home')}
+
+
+const weekPlan=[
+[
+{name:'Owsianka z jabłkiem',meal:'Śniadanie',k:400,p:15,f:9,c:65},
+{name:'Kurczak z kaszą',meal:'Obiad',k:560,p:45,f:14,c:62},
+{name:'Skyr z bananem',meal:'Przekąska',k:230,p:19,f:5,c:29},
+{name:'Kanapki z twarogiem',meal:'Kolacja',k:380,p:27,f:10,c:43}],
+[
+{name:'Jajecznica z pieczywem',meal:'Śniadanie',k:420,p:24,f:20,c:35},
+{name:'Makaron z indykiem',meal:'Obiad',k:570,p:43,f:10,c:72},
+{name:'Jogurt z owocami',meal:'Przekąska',k:220,p:12,f:5,c:32},
+{name:'Tortilla z hummusem',meal:'Kolacja',k:390,p:13,f:14,c:52}],
+[
+{name:'Placuszki bananowe',meal:'Śniadanie',k:430,p:20,f:14,c:53},
+{name:'Łosoś z ziemniakami',meal:'Obiad',k:610,p:36,f:25,c:55},
+{name:'Jabłko i orzechy',meal:'Przekąska',k:230,p:4,f:16,c:22},
+{name:'Sałatka z jajkiem',meal:'Kolacja',k:350,p:21,f:22,c:15}],
+[
+{name:'Kanapki z pastą jajeczną',meal:'Śniadanie',k:410,p:22,f:16,c:43},
+{name:'Chili con carne z ryżem',meal:'Obiad',k:590,p:38,f:15,c:72},
+{name:'Koktajl truskawkowy',meal:'Przekąska',k:220,p:10,f:5,c:35},
+{name:'Sałatka z tuńczykiem',meal:'Kolacja',k:360,p:30,f:7,c:40}],
+[
+{name:'Owsianka kakaowa',meal:'Śniadanie',k:420,p:16,f:10,c:66},
+{name:'Pulpeciki z indyka',meal:'Obiad',k:550,p:39,f:13,c:61},
+{name:'Serek wiejski z owocami',meal:'Przekąska',k:240,p:23,f:7,c:23},
+{name:'Grzanki z mozzarellą',meal:'Kolacja',k:390,p:22,f:15,c:42}],
+[
+{name:'Omlet ze szpinakiem',meal:'Śniadanie',k:400,p:25,f:22,c:25},
+{name:'Domowy burger z kurczakiem',meal:'Obiad',k:590,p:43,f:15,c:68},
+{name:'Skyr z granolą',meal:'Przekąska',k:250,p:19,f:6,c:29},
+{name:'Sałatka grecka',meal:'Kolacja',k:360,p:12,f:25,c:20}],
+[
+{name:'Tosty francuskie',meal:'Śniadanie',k:420,p:19,f:12,c:55},
+{name:'Pieczony kurczak z ryżem',meal:'Obiad',k:580,p:44,f:12,c:70},
+{name:'Koktajl skyr-banan',meal:'Przekąska',k:230,p:19,f:2,c:34},
+{name:'Twarożek z warzywami',meal:'Kolacja',k:350,p:28,f:9,c:39}]
+];
+const dayNames=['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
+function renderDayPlan(){
+ const d=+$('daySelect').value,meals=weekPlan[d];
+ const total=meals.reduce((a,m)=>({k:a.k+m.k,p:a.p+m.p,f:a.f+m.f,c:a.c+m.c}),{k:0,p:0,f:0,c:0});
+ $('dayPlan').innerHTML=`<h3 style="margin:8px 0">${dayNames[d]}</h3>`+
+ meals.map(m=>`<div class="food"><div><b>${m.meal}: ${esc(m.name)}</b><small>${m.k} kcal · B ${m.p} g · T ${m.f} g · W ${m.c} g</small></div></div>`).join('')+
+ `<div class="result" style="display:block"><b>Razem: ${total.k} kcal</b><div class="muted" style="margin-top:5px">Białko ${total.p} g · Tłuszcze ${total.f} g · Węglowodany ${total.c} g</div></div>`;
+}
+
+const shoppingGroups=[
+['Mięso, ryby i nabiał','Pierś z kurczaka — ok. 300 g','Indyk — ok. 300 g','Chuda wołowina — ok. 120 g','Łosoś — ok. 130 g','Tuńczyk — 1 puszka','Jajka — ok. 10 szt.','Skyr — ok. 300 g','Twaróg — ok. 150 g','Serek wiejski — ok. 200 g','Jogurt naturalny — ok. 500 g','Mleko — 1 l','Kefir — 250 ml','Mozzarella — 1 opakowanie','Feta — 1 opakowanie'],
+['Produkty zbożowe','Płatki owsiane — ok. 200 g','Ryż — ok. 150 g','Kasza gryczana — ok. 75 g','Makaron — ok. 80 g','Chleb pełnoziarnisty','Tortille — 1 opakowanie','Bułki do burgerów — 1–2 szt.','Granola — małe opakowanie'],
+['Warzywa i owoce','Banany — ok. 4 szt.','Jabłka — ok. 2 szt.','Owoce jagodowe — ok. 300 g','Truskawki — ok. 200 g','Ziemniaki — ok. 500 g','Brokuł — 1 szt.','Pomidory — ok. 5 szt.','Ogórki — 2 szt.','Papryka — 2 szt.','Marchew — 3 szt.','Sałata — 1 opakowanie','Szpinak — 1 opakowanie','Rzodkiewka — 1 pęczek','Szczypiorek — 1 pęczek'],
+['Pozostałe','Fasola czerwona — 1 puszka','Kukurydza — 1 mała puszka','Passata lub pomidory z puszki','Hummus — 1 opakowanie','Orzechy włoskie i migdały','Oliwa','Oliwki','Miód','Kakao','Cynamon i przyprawy']
+];
+function renderShoppingList(){
+ const checked=JSON.parse(localStorage.getItem('nf_shopping_checked')||'{}');
+ $('shoppingList').innerHTML=shoppingGroups.map((g,gi)=>`<div style="margin:12px 0"><b>${g[0]}</b>`+
+ g.slice(1).map((item,i)=>{const id=gi+'_'+i;return `<label style="display:flex;gap:9px;align-items:center;margin:8px 0;color:var(--text)"><input type="checkbox" ${checked[id]?'checked':''} onchange="toggleShoppingItem('${id}',this.checked)" style="width:18px;height:18px;accent-color:var(--accent)"><span>${item}</span></label>`}).join('')+'</div>').join('');
+}
+function toggleShoppingItem(id,value){const checked=JSON.parse(localStorage.getItem('nf_shopping_checked')||'{}');checked[id]=value;localStorage.setItem('nf_shopping_checked',JSON.stringify(checked))}
+function resetShoppingList(){localStorage.removeItem('nf_shopping_checked');renderShoppingList()}
+function showNextDay(){$('daySelect').value=(+$('daySelect').value+1)%7;renderDayPlan()}
+function addDayPlan(){
+ const d=+$('daySelect').value;
+ weekPlan[d].forEach(m=>foods.push({name:m.meal+': '+m.name,k:m.k,p:m.p,f:m.f,c:m.c}));
+ save();alert('Dodano jadłospis na '+dayNames[d]+' do dziennika!');switchTab('home');
+}
+
+let selectedMood='';
+const supportMessages=[
+'Nie musisz zmieniać wszystkiego naraz. Jeden mały, życzliwy wobec siebie krok jest wystarczający.',
+'Twoja wartość nie zmienia się wraz z liczbą na wadze.',
+'Jedzenie nie jest nagrodą ani karą. Masz prawo jeść i cieszyć się posiłkami.',
+'Odpoczynek jest częścią dbania o siebie, a nie lenistwem.',
+'Trudniejszy dzień nie przekreśla postępów. Nie musisz niczego nadrabiać.',
+'Skup się na tym, co pomaga Ci czuć się zdrowiej i mieć więcej energii, nie na perfekcji.',
+'Możesz zwolnić, zmienić plan albo poprosić o pomoc. To też jest dbanie o siebie.'
+];
+function selectMood(mood){
+ selectedMood=mood;
+ document.querySelectorAll('.mood-btn').forEach(b=>{b.classList.toggle('active',b.dataset.mood===mood);b.classList.toggle('secondary',b.dataset.mood!==mood)});
+}
+function saveSupportCheckin(){
+ if(!selectedMood){alert('Wybierz najpierw, jak się dzisiaj czujesz.');return}
+ const entries=readStore('mf_support_checkins',[]);
+ entries.push({date:todayKey(),mood:selectedMood,note:$('supportNote').value.trim()});
+ localStorage.setItem('mf_support_checkins',JSON.stringify(entries));
+ $('supportSaved').textContent='Zapisano ❤️ Dziękuję, że poświęcasz sobie chwilę. Twoje samopoczucie jest ważne.';
+ $('supportNote').value='';
+}
+function newSupportMessage(){
+ const old=$('supportMessage').textContent;
+ let choices=supportMessages.filter(x=>x!==old);
+ $('supportMessage').textContent=choices[Math.floor(Math.random()*choices.length)];
+}
+function renderSupport(){
+ const entries=readStore('mf_support_checkins',[]);
+ const today=entries.filter(x=>x.date===todayKey()).slice(-1)[0];
+ if(today){selectedMood=today.mood;$('supportSaved').textContent='Dzisiejszy nastrój: '+today.mood+' ❤️';selectMood(today.mood)}
+}
+
+const todayKey=()=>new Date().toISOString().slice(0,10);
+const readStore=(key,fallback)=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch(e){return fallback}};
+let progressRange=7;
+let waterData=readStore('nf_water',{}), waterTarget=Number(localStorage.getItem('nf_water_target')||2000);
+let customRecipes=readStore('nf_custom_recipes',[]);
+let workouts=readStore('nf_workouts',[]);
+let weightEntries=readStore('nf_weights',[]);
+let dailyHistory=readStore('nf_daily_history',{});
+function snapshotDay(){
+ const total=foods.reduce((a,x)=>a+(Number(x.k)||0),0);
+ dailyHistory[todayKey()]={k:Math.round(total),updated:Date.now()};
+ localStorage.setItem('nf_daily_history',JSON.stringify(dailyHistory));
+}
+const fmtDate=(d)=>new Date(d+'T12:00:00').toLocaleDateString('pl-PL',{day:'2-digit',month:'2-digit'});
+function calculateNeeds(){
+ const age=+$('age').value,h=+$('height').value,w=+$('weight').value;
+ if(age<18||age>100||h<120||h>230||w<35||w>300){alert('Uzupełnij poprawnie wiek (18–100), wzrost (120–230 cm) i wagę (35–300 kg).');return}
+ const base=10*w+6.25*h-5*age+($('sex').value==='male'?5:-161);
+ const tdee=Math.round(base*(+$('activity').value));
+ const type=$('goalType').value;
+ const target=Math.round(tdee+(type==='lose'?-300:type==='gain'?200:0));
+ $('needsResult').style.display='block';
+ $('needsResult').innerHTML=`<b>Szacunkowe utrzymanie: ${tdee} kcal/dzień</b><p>Orientacyjny cel: <b>${target} kcal/dzień</b></p><button onclick="applyCalculatedGoal(${target})">Ustaw ten cel</button>`;
+ localStorage.setItem('nf_profile',JSON.stringify({age,h,w,sex:$('sex').value,activity:$('activity').value,goalType:type}));
+}
+function applyCalculatedGoal(n){goal=n;$('goalInput').value=n;localStorage.setItem('nf_goal',goal);render();alert('Zapisano dzienny cel: '+n+' kcal.')}
+function waterToday(){return Number(waterData[todayKey()]||0)}
+function renderWater(){
+ $('waterNow').textContent=waterToday()+' ml';$('waterTargetView').textContent=waterTarget+' ml';$('waterLeft').textContent=Math.max(0,waterTarget-waterToday())+' ml';
+ $('waterBar').style.width=Math.min(100,waterToday()/waterTarget*100)+'%';$('waterTarget').value=waterTarget;
+}
+function addWater(n){waterData[todayKey()]=waterToday()+n;localStorage.setItem('nf_water',JSON.stringify(waterData));renderWater()}
+function saveWaterTarget(){const n=+$('waterTarget').value;if(n<250||n>10000){alert('Wpisz cel od 250 do 10000 ml.');return}waterTarget=n;localStorage.setItem('nf_water_target',n);renderWater()}
+function resetWater(){if(confirm('Wyzerować dzisiejszy licznik wody?')){waterData[todayKey()]=0;localStorage.setItem('nf_water',JSON.stringify(waterData));renderWater()}}
+function setProgressRange(n){progressRange=n;renderProgress()}
+function renderProgress(){
+ const days=Array.from({length:progressRange},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(progressRange-1-i));return d.toISOString().slice(0,10)});
+ const vals=days.map(d=>dailyHistory[d]?.k||0),max=Math.max(goal,...vals,1);
+ $('calorieChart').innerHTML=vals.map((v,i)=>`<div title="${fmtDate(days[i])}: ${v} kcal" style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:4px"><div style="width:100%;height:${Math.max(2,v/max*112)}px;background:linear-gradient(180deg,var(--green),var(--green2));border-radius:5px 5px 2px 2px"></div><small style="font-size:9px;color:var(--muted)">${progressRange===7?fmtDate(days[i]):days[i].slice(8)}</small></div>`).join('');
+ const recent=weightEntries.filter(x=>days.includes(x.date)).sort((a,b)=>a.date.localeCompare(b.date));
+ const wmin=recent.length?Math.min(...recent.map(x=>x.weight)):0,wmax=recent.length?Math.max(...recent.map(x=>x.weight)):1,span=Math.max(1,wmax-wmin);
+ $('weightChart').innerHTML=recent.length?recent.map(x=>`<div title="${fmtDate(x.date)}: ${x.weight} kg" style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:4px"><div style="width:100%;height:${28+(x.weight-wmin)/span*75}px;background:linear-gradient(180deg,#f0a8ff,#c45be8);border-radius:5px 5px 2px 2px"></div><small style="font-size:9px;color:var(--muted)">${fmtDate(x.date)}</small></div>`).join(''):'<span class="muted">Dodaj pierwszy pomiar, aby zobaczyć wykres.</span>';
+ $('weightHistory').textContent=recent.length?recent.map(x=>fmtDate(x.date)+' — '+x.weight+' kg').join(' · '):'Brak pomiarów w wybranym okresie.';
+ $('range7').classList.toggle('active',progressRange===7);$('range30').classList.toggle('active',progressRange===30);
+}
+function saveWeight(){
+ const w=+$('weightEntry').value;if(w<20||w>400){alert('Wpisz wagę od 20 do 400 kg.');return}
+ const date=todayKey();weightEntries=weightEntries.filter(x=>x.date!==date);weightEntries.push({date,weight:w});weightEntries.sort((a,b)=>a.date.localeCompare(b.date));localStorage.setItem('nf_weights',JSON.stringify(weightEntries));$('weightEntry').value='';renderProgress();
+}
+function saveCustomRecipe(){
+ const name=$('customRecipeName').value.trim(),desc=$('customRecipeDesc').value.trim(),k=+$('customRecipeK').value,p=+$('customRecipeP').value||0,f=+$('customRecipeF').value||0,c=+$('customRecipeC').value||0;
+ if(!name||$('customRecipeK').value===''||k<0){alert('Podaj nazwę i kalorie przepisu.');return}
+ customRecipes.push({name,desc,k,p,f,c});localStorage.setItem('nf_custom_recipes',JSON.stringify(customRecipes));
+ ['customRecipeName','customRecipeDesc','customRecipeK','customRecipeP','customRecipeF','customRecipeC'].forEach(id=>$(id).value='');renderCustomRecipes();
+}
+function renderCustomRecipes(){
+ $('customRecipeList').innerHTML=customRecipes.length?'<h3>Twoje zapisane przepisy</h3>'+customRecipes.map((r,i)=>`<div class="food"><div><b>${esc(r.name)}</b><small>${esc(r.desc||'Własny przepis')} · ${Math.round(r.k)} kcal · B ${r.p} g · T ${r.f} g · W ${r.c} g</small><button style="margin-top:6px" onclick="addCustomRecipe(${i})">Dodaj do dziennika</button></div><button class="danger" onclick="deleteCustomRecipe(${i})">Usuń</button></div>`).join(''):'<p class="muted">Nie masz jeszcze własnych przepisów.</p>';
+}
+function addCustomRecipe(i){const r=customRecipes[i];foods.push({name:r.name,k:r.k,p:r.p,f:r.f,c:r.c});save();alert('Dodano '+r.name+' do dziennika.')}
+function deleteCustomRecipe(i){customRecipes.splice(i,1);localStorage.setItem('nf_custom_recipes',JSON.stringify(customRecipes));renderCustomRecipes()}
+function addWorkout(){
+ const name=$('exerciseName').value.trim(),sets=+$('exerciseSets').value,reps=+$('exerciseReps').value,load=+$('exerciseLoad').value||0;
+ if(!name||sets<1||reps<1){alert('Podaj ćwiczenie, liczbę serii i powtórzeń.');return}
+ workouts.push({date:todayKey(),name,sets,reps,load});localStorage.setItem('nf_workouts',JSON.stringify(workouts));
+ $('exerciseName').value='';$('exerciseLoad').value='';renderWorkouts();
+}
+function deleteWorkout(i){workouts.splice(i,1);localStorage.setItem('nf_workouts',JSON.stringify(workouts));renderWorkouts()}
+function renderWorkouts(){
+ const today=workouts.map((x,i)=>({...x,i})).filter(x=>x.date===todayKey());
+ $('todayWorkout').innerHTML=today.length?today.map(x=>`<div class="food"><div><b>${esc(x.name)}</b><small>${x.sets} serie × ${x.reps} powt. ${x.load? '· '+x.load+' kg':''}</small></div><button class="danger" onclick="deleteWorkout(${x.i})">Usuń</button></div>`).join(''):'Brak ćwiczeń zapisanych dzisiaj.';
+ const grouped={};workouts.forEach(x=>(grouped[x.date]??=[]).push(x));
+ const dates=Object.keys(grouped).sort().reverse();
+ $('workoutHistory').innerHTML=dates.length?dates.map(d=>`<div style="padding:9px 0;border-bottom:1px solid var(--line)"><b>${fmtDate(d)}</b><div class="muted">${grouped[d].map(x=>esc(x.name)+' — '+x.sets+'×'+x.reps+(x.load?' ('+x.load+' kg)':'')).join('<br>')}</div></div>`).join(''):'Brak zapisanych treningów.';
+}
+
+render();renderRecipes();renderDayPlan();renderShoppingList();
+renderWater();renderProgress();renderCustomRecipes();renderWorkouts();renderSupport();
+const savedProfile=readStore("nf_profile",null);if(savedProfile){["age","height","weight","sex","activity","goalType"].forEach((id,i)=>{const keys=["age","h","w","sex","activity","goalType"];if(savedProfile[keys[i]]!==undefined)$(id).value=savedProfile[keys[i]]})}
+
+// Register service worker for PWA
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body></html>
